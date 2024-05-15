@@ -54,7 +54,8 @@ const panel = {
       type: 'item',
       url: '/panel/token',
       icon: icons.IconKey,
-      breadcrumbs: false
+      breadcrumbs: false,
+      isAdmin: true
     },
     {
       id: 'log',
