@@ -6,6 +6,7 @@ import (
 	"github.com/songquanpeng/one-api/common"
 	"github.com/songquanpeng/one-api/common/config"
 	"github.com/songquanpeng/one-api/common/ctxkey"
+	"github.com/songquanpeng/one-api/common/helper"
 	"github.com/songquanpeng/one-api/common/random"
 	"github.com/songquanpeng/one-api/model"
 	"net/http"
@@ -123,6 +124,7 @@ func Register(c *gin.Context) {
 		})
 		return
 	}
+
 	var user model.User
 	err := json.NewDecoder(c.Request.Body).Decode(&user)
 	if err != nil {
@@ -132,6 +134,7 @@ func Register(c *gin.Context) {
 		})
 		return
 	}
+
 	if err := common.Validate.Struct(&user); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
@@ -139,6 +142,7 @@ func Register(c *gin.Context) {
 		})
 		return
 	}
+
 	if config.EmailVerificationEnabled {
 		if user.Email == "" || user.VerificationCode == "" {
 			c.JSON(http.StatusOK, gin.H{
@@ -155,6 +159,7 @@ func Register(c *gin.Context) {
 			return
 		}
 	}
+
 	affCode := user.AffCode // this code is the inviter's code, not the user's own code
 	inviterId, _ := model.GetUserIdByAffCode(affCode)
 	cleanUser := model.User{
@@ -163,6 +168,7 @@ func Register(c *gin.Context) {
 		DisplayName: user.Username,
 		InviterId:   inviterId,
 	}
+
 	if config.EmailVerificationEnabled {
 		cleanUser.Email = user.Email
 	}
@@ -173,11 +179,33 @@ func Register(c *gin.Context) {
 		})
 		return
 	}
+
+	// 添加 Token 的逻辑
+	token := model.Token{
+		UserId:         cleanUser.Id,
+		Name:           "default", // or any other default name
+		Key:            random.GenerateKey(),
+		CreatedTime:    helper.GetTimestamp(),
+		AccessedTime:   helper.GetTimestamp(),
+		UnlimitedQuota: true,
+	}
+
+	if err := model.DB.Create(&token).Error; err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": err.Error(),
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "",
+		"message": "注册成功",
+		"data": gin.H{
+			"user":  cleanUser,
+			"token": token,
+		},
 	})
-	return
 }
 
 func GetAllUsers(c *gin.Context) {
@@ -276,6 +304,19 @@ func GetUserDashboard(c *gin.Context) {
 		"data":    dashboards,
 	})
 	return
+}
+func GenerateAccessTokenForUser(user *model.User) (string, error) {
+	user.AccessToken = random.GetUUID()
+
+	if model.DB.Where("access_token = ?", user.AccessToken).First(user).RowsAffected != 0 {
+		return "", fmt.Errorf("请重试，系统生成的 UUID 竟然重复了！")
+	}
+
+	if err := user.Update(false); err != nil {
+		return "", err
+	}
+
+	return user.AccessToken, nil
 }
 
 func GenerateAccessToken(c *gin.Context) {
