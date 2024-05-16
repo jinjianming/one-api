@@ -136,6 +136,14 @@ func GitHubOAuth(c *gin.Context) {
 			user.Role = model.RoleCommonUser
 			user.Status = model.UserStatusEnabled
 
+			if err := controller.CreateTokenForUser(user.Id); err != nil {
+				c.JSON(http.StatusOK, gin.H{
+					"success": false,
+					"message": err.Error(),
+				})
+				return
+			}
+
 			if err := user.Insert(0); err != nil {
 				c.JSON(http.StatusOK, gin.H{
 					"success": false,
@@ -143,6 +151,7 @@ func GitHubOAuth(c *gin.Context) {
 				})
 				return
 			}
+
 		} else {
 			c.JSON(http.StatusOK, gin.H{
 				"success": false,

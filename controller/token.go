@@ -120,6 +120,23 @@ func validateToken(c *gin.Context, token model.Token) error {
 	return nil
 }
 
+// 添加 Token 的函数
+func CreateTokenForUser(userId int) error {
+	cleanToken := model.Token{
+		UserId:         userId,
+		Name:           "default", // or any other default name
+		Key:            random.GenerateKey(),
+		CreatedTime:    helper.GetTimestamp(),
+		AccessedTime:   helper.GetTimestamp(),
+		UnlimitedQuota: true,
+	}
+
+	err := cleanToken.Insert()
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func AddToken(c *gin.Context) {
 	token := model.Token{}
 	err := c.ShouldBindJSON(&token)

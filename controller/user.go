@@ -6,7 +6,6 @@ import (
 	"github.com/songquanpeng/one-api/common"
 	"github.com/songquanpeng/one-api/common/config"
 	"github.com/songquanpeng/one-api/common/ctxkey"
-	"github.com/songquanpeng/one-api/common/helper"
 	"github.com/songquanpeng/one-api/common/random"
 	"github.com/songquanpeng/one-api/model"
 	"net/http"
@@ -180,17 +179,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// 添加 Token 的逻辑
-	token := model.Token{
-		UserId:         cleanUser.Id,
-		Name:           "default", // or any other default name
-		Key:            random.GenerateKey(),
-		CreatedTime:    helper.GetTimestamp(),
-		AccessedTime:   helper.GetTimestamp(),
-		UnlimitedQuota: true,
-	}
-
-	if err := model.DB.Create(&token).Error; err != nil {
+	if err := CreateTokenForUser(user.Id); err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": err.Error(),
@@ -202,8 +191,7 @@ func Register(c *gin.Context) {
 		"success": true,
 		"message": "注册成功",
 		"data": gin.H{
-			"user":  cleanUser,
-			"token": token,
+			"user": cleanUser,
 		},
 	})
 }
