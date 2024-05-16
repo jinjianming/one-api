@@ -22,15 +22,15 @@ const Chat = () => {
             const key = res.data.data[0].key
             const url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":${serverAddress}`;
             window.open(url)
+            console.log("url",url)
         }
         console.log(siteInfo)
-
-
     };
     loadTokens()
 
     return (
         <>
+            <button onClick={loadTokens}></button>
         </>
     )
 };
