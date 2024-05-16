@@ -5,8 +5,7 @@ import { LOGIN } from 'store/actions';
 import config from 'config';
 
 export const API = axios.create({
-  // baseURL: process.env.REACT_APP_SERVER ? process.env.REACT_APP_SERVER : '/'
-    baseURL: "https://chat.chatapi.asia/"
+  baseURL: process.env.REACT_APP_SERVER ? process.env.REACT_APP_SERVER : '/'
 });
 
 API.interceptors.response.use(

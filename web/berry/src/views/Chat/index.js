@@ -1,30 +1,33 @@
-import {API} from "../../utils/api";
-
+import { useEffect } from "react";
+import { API } from "../../utils/api";
 
 const Chat = () => {
     const loadTokens = async (startIdx) => {
-        // const [tokens, setTokens] = useState([]);
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        // const siteInfo = useSelector((state) => state.siteInfo);
-        const res = await API.get(`/api/token/`);
-        // const status = localStorage.getItem('status');
-        const siteInfo = localStorage.getItem('siteInfo');
-        // let serverAddress = '';
-        const serverAddress = siteInfo.server_address;
-        console.log(siteInfo)
-        console.log("siteInfo.chat_link", siteInfo.chat_link)
-        const key = res.data.data[0].key
-        const url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":${serverAddress}`;
-        window.open(url)
-        console.log("url", url)
-        console.log(siteInfo)
+        try {
+            const res = await API.get(`/api/token/`);
+            const siteInfo = JSON.parse(localStorage.getItem('siteInfo'));
+            if (!siteInfo) {
+                console.error("siteInfo not found in localStorage");
+                return;
+            }
+            const serverAddress = siteInfo.server_address;
+            const key = res.data.data[0].key;
+            const url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":"${serverAddress}"}`;
+            window.open(url);
+        } catch (error) {
+            console.error("Error loading tokens:", error);
+        }
     };
-    loadTokens()
+
+    useEffect(() => {
+        loadTokens();
+    }, []);
 
     return (
         <>
-            <button onClick={loadTokens}></button>
+            <button onClick={loadTokens}>Load Tokens</button>
         </>
-    )
+    );
 };
+
 export default Chat;
