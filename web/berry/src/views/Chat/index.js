@@ -1,26 +1,29 @@
-import {Grid} from '@mui/material';
-import {gridSpacing} from 'store/constant';
+
 import {API} from "../../utils/api";
+
 
 const Chat = () => {
     const loadTokens = async (startIdx) => {
         // const [tokens, setTokens] = useState([]);
-
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        // const siteInfo = useSelector((state) => state.siteInfo);
         const res = await API.get(`/api/token/`);
-        let status = localStorage.getItem('status');
-        const chatLink = localStorage.getItem('chat_link');
+        // const status = localStorage.getItem('status');
+        const siteInfo = localStorage.getItem('siteInfo');
         let serverAddress = '';
-        if (status) {
-            status = JSON.parse(status);
-            serverAddress = status.server_address;
+        if (siteInfo?.server_address) {
+            serverAddress = siteInfo.server_address;
+        } else {
+            serverAddress = window.location.host;
         }
-        if (serverAddress === '') {
-            serverAddress = window.location.origin;
+        console.log(siteInfo)
+
+        if (siteInfo?.chat_link) {
+            const key = res.data.data[0].key
+            const url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":${serverAddress}`;
+            window.open(url)
         }
-        const key = res.data.data[0].key
-        const url = `${chatLink}/#/?settings={"key":"sk-${key}","url":${serverAddress}`;
-        console.log(url)
-        window.open(url)
+        console.log(siteInfo)
 
 
     };
