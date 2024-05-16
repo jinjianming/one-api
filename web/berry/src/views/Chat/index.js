@@ -31,7 +31,7 @@ const Chat = () => {
 
 
     return (
-        <iframe
+        <iframe marginwidth="0" marginheight="0" frameborder="0"
             src={chatUrl}
             style={{ width: '100%', height: '85vh', border: 'none' }}
         />
