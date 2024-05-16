@@ -1,4 +1,3 @@
-
 import {API} from "../../utils/api";
 
 
@@ -10,20 +9,14 @@ const Chat = () => {
         const res = await API.get(`/api/token/`);
         // const status = localStorage.getItem('status');
         const siteInfo = localStorage.getItem('siteInfo');
-        let serverAddress = '';
-        if (siteInfo?.server_address) {
-            serverAddress = siteInfo.server_address;
-        } else {
-            serverAddress = window.location.host;
-        }
+        // let serverAddress = '';
+        const serverAddress = siteInfo.server_address;
         console.log(siteInfo)
-
-        if (siteInfo?.chat_link) {
-            const key = res.data.data[0].key
-            const url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":${serverAddress}`;
-            window.open(url)
-            console.log("url",url)
-        }
+        console.log("siteInfo.chat_link", siteInfo.chat_link)
+        const key = res.data.data[0].key
+        const url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":${serverAddress}`;
+        window.open(url)
+        console.log("url", url)
         console.log(siteInfo)
     };
     loadTokens()
