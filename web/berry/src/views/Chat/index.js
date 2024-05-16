@@ -30,7 +30,7 @@ const Chat = () => {
     }, []);
 
     return (
-        <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 20px)', padding: '0', margin: '0' }}>
+        <div className="MuiContainer-root MuiContainer-maxWidthLg css-1eqbdat" style={{ position: 'relative', width: '100%', height: '100%', padding: '0', margin: '0' }}>
             {loading && (
                 <div style={{
                     position: 'absolute',
