@@ -19,6 +19,7 @@ const Chat = () => {
         }
         const key = res.data.data[0].key
         const url = `${chatLink}/#/?settings={"key":"sk-${key}","url":${serverAddress}`;
+        console.log(url)
         window.open(url)
 
 
