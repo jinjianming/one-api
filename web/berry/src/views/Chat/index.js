@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { API } from "../../utils/api";
 
 const Chat = () => {
+    const [chatUrl, setChatUrl] = useState("");
+
     const loadTokens = async (startIdx) => {
         try {
             const res = await API.get(`/api/token/`);
@@ -13,15 +15,11 @@ const Chat = () => {
             const serverAddress = siteInfo.server_address;
             const key = res.data.data[0].key;
             const url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":"${serverAddress}"}`;
-            window.open(url);
+            setChatUrl(url);
         } catch (error) {
             console.error("Error loading tokens:", error);
         }
     };
-
-    // useEffect(() => {
-    //     loadTokens();
-    // }, []);
 
     const buttonStyle = {
         padding: '10px 20px',
@@ -41,7 +39,7 @@ const Chat = () => {
     };
 
     return (
-        <>
+        <div>
             <button
                 onClick={loadTokens}
                 style={buttonStyle}
@@ -50,7 +48,14 @@ const Chat = () => {
             >
                 点击开始对话
             </button>
-        </>
+            {chatUrl && (
+                <iframe
+                    src={chatUrl}
+                    title="Chat"
+                    style={{ width: '100%', height: '500px', border: 'none', marginTop: '20px' }}
+                />
+            )}
+        </div>
     );
 };
 
