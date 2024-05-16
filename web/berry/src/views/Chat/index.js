@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { API } from "../../utils/api";
 
 const Chat = () => {
     const [chatUrl, setChatUrl] = useState("");
+    const [loading, setLoading] = useState(true);
 
-    const loadTokens = async (startIdx) => {
+    const loadTokens = async () => {
         try {
             const res = await API.get(`/api/token/`);
             const siteInfo = JSON.parse(localStorage.getItem('siteInfo'));
             if (!siteInfo) {
                 console.error("siteInfo not found in localStorage");
+                setLoading(false);
                 return;
             }
             const serverAddress = siteInfo.server_address;
@@ -18,41 +20,35 @@ const Chat = () => {
             setChatUrl(url);
         } catch (error) {
             console.error("Error loading tokens:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const buttonStyle = {
-        padding: '10px 20px',
-        fontSize: '16px',
-        fontWeight: 'bold',
-        color: '#fff',
-        backgroundColor: '#007bff',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: 'pointer',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        transition: 'background-color 0.3s ease',
-    };
-
-    const buttonHoverStyle = {
-        backgroundColor: '#0056b3',
-    };
+    useEffect(() => {
+        loadTokens();
+    }, []);
 
     return (
-        <div>
-            <button
-                onClick={loadTokens}
-                style={buttonStyle}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = buttonHoverStyle.backgroundColor}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor}
-            >
-                点击开始对话
-            </button>
+        <div style={{ position: 'relative', width: '100%', height: '500px' }}>
+            {loading && (
+                <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                }}>
+                    加载中...
+                </div>
+            )}
             {chatUrl && (
                 <iframe
                     src={chatUrl}
                     title="Chat"
-                    style={{ width: '100%', height: '500px', border: 'none', marginTop: '20px' }}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                    onLoad={() => setLoading(false)}
                 />
             )}
         </div>
