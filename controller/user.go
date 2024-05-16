@@ -179,14 +179,6 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	if err := CreateTokenForUser(user.Id); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": err.Error(),
-		})
-		return
-	}
-
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "注册成功",
