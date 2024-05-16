@@ -30,7 +30,7 @@ const Chat = () => {
     }, []);
 
     return (
-        <div style={{ position: 'relative', width: '100%', height: '500px' }}>
+        <div style={{ position: 'relative', width: '100%', height: '100vh', padding: '0', margin: '0' }}>
             {loading && (
                 <div style={{
                     position: 'absolute',
@@ -47,7 +47,7 @@ const Chat = () => {
                 <iframe
                     src={chatUrl}
                     title="Chat"
-                    style={{ width: '100%', height: '100%', border: 'none' }}
+                    style={{ width: '100%', height: '100%', border: 'none', padding: '0', margin: '0' }}
                     onLoad={() => setLoading(false)}
                 />
             )}
