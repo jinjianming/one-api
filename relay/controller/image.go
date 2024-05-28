@@ -102,7 +102,8 @@ func RelayImageHelper(c *gin.Context, relayMode int) *relaymodel.ErrorWithStatus
 	quota := int64(ratio*imageCostRatio*1000) * int64(imageRequest.N)
 
 	if userQuota-quota < 0 {
-		return openai.ErrorWrapper(errors.New("user quota is not enough"), "insufficient_user_quota", http.StatusForbidden)
+		//return openai.ErrorWrapper(errors.New("user quota is not enough"), "insufficient_user_quota", http.StatusForbidden)
+		return openai.ErrorWrapper(errors.New("请移步充值页面进行充值,可到日志中看到使用明细"), "账户余额不足", http.StatusForbidden)
 	}
 
 	// do request
