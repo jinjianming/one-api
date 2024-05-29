@@ -36,7 +36,7 @@ const SiderBar = () => {
 
   const headerButtons = useMemo(() => [
     {
-      text: '首页',
+      text: '首页1',
       itemKey: 'home',
       to: '/',
       icon: <IconHome />
