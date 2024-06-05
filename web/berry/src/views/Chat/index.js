@@ -34,12 +34,16 @@ const Chat = () => {
                 setLoading(false);
                 return;
             }
-            // const url = `https://like.chatapi.asia/#/?settings={"key":"sk-xxx","url":"https://chat.chatapi.asia"}`;
+            // 获取基础信息
             const serverAddress = siteInfo.server_address;
             const key = res.data.data[0].key;
+            // 适配 ChatNext
+            // const url = `https://like.chatapi.asia/#/?settings={"key":"sk-xxx","url":"https://chat.chatapi.asia"}`;
             // const url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":"${serverAddress}"}`;
+
+            // 适配LoveHub
             const url = `${siteInfo.chat_link}?settings={"keyVaults":{"openai":{"apiKey":"sk-${key}","baseURL":"${serverAddress}/v1"}}}`;
-            console.log(url)
+            // const url = `https://like2.chatapi.asia/?settings={"keyVaults":{"openai":{"apiKey":"sk-xxx","baseURL":"http://one-api:3000/v1/"}}}`;
             setChatUrl(url);
         } catch (error) {
             console.error("Error loading tokens:", error);
