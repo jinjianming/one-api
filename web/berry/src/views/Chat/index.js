@@ -39,7 +39,7 @@ const Chat = () => {
             const key = res.data.data[0].key;
             // const url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":"${serverAddress}"}`;
             const url = `https://like2.chatapi.asia/?settings={"keyVaults":{"openai":{"apiKey":"sk-${key}","baseURL":"${serverAddress}/v1"}}}`;
-
+            console.log(url)
             setChatUrl(url);
         } catch (error) {
             console.error("Error loading tokens:", error);
