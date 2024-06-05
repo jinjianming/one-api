@@ -45,13 +45,13 @@ const Chat = () => {
                     keyVaults: {
                         openai: {
                             apiKey: key,
-                            baseURL: 'https://your-proxy.com/v1',
+                            baseURL: 'https://like2.chatapi.asia/v1',
                         },
                     },
                 };
                 url = `/?settings=${JSON.stringify(settings)}`;
             } else if (theme === "ChatGPT-Next-Web") {
-                url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":"${serverAddress}"}`;
+                url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":"https://like.chatapi.asia/"}`;
             }
 
             setChatUrl(url);
