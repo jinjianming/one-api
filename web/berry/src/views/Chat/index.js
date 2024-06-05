@@ -38,7 +38,7 @@ const Chat = () => {
             const serverAddress = siteInfo.server_address;
             const key = res.data.data[0].key;
             // const url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":"${serverAddress}"}`;
-            const url = `https://like2.chatapi.asia/?settings={"keyVaults":{"openai":{"apiKey":"sk-${key}","baseURL":"${serverAddress}/v1"}}}`;
+            const url = `${siteInfo.chat_link}?settings={"keyVaults":{"openai":{"apiKey":"sk-${key}","baseURL":"${serverAddress}/v1"}}}`;
             console.log(url)
             setChatUrl(url);
         } catch (error) {
