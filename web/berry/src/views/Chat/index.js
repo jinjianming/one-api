@@ -53,6 +53,7 @@ const Chat = () => {
                     },
                 };
                 url = `${siteInfo.chat_link}/#/?settings=${JSON.stringify(settings)}`;
+                console.log(url)
             } else if (selectedTheme === "ChatGPT-Next-Web") {
                 url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":"https://next.chatapi.asia"}`;
             }
