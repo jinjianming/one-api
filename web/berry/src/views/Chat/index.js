@@ -25,7 +25,7 @@ const Chat = () => {
     const [loading, setLoading] = useState(true);
     const [theme, setTheme] = useState("lobehub"); // 默认主题
 
-    const loadTokens = async () => {
+    const loadTokens = async (selectedTheme = theme) => {
         try {
             const res = await API.get(`/api/token/`);
             const siteInfo = JSON.parse(localStorage.getItem('siteInfo'));
@@ -40,18 +40,21 @@ const Chat = () => {
             const serverAddress = siteInfo.server_address;
             let url = "";
 
-            if (theme === "lobehub") {
+            if (selectedTheme === "lobehub") {
                 const settings = {
                     keyVaults: {
                         openai: {
                             apiKey: key,
-                            baseURL: 'https://your-proxy.com/v1',
+                            baseURL: serverAddress,
                         },
+                    },
+                    ProviderConfig: {
+                        fetchOnClient: true
                     },
                 };
                 url = `/?settings=${JSON.stringify(settings)}`;
-            } else if (theme === "ChatGPT-Next-Web") {
-                url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":"${serverAddress}"}`;
+            } else if (selectedTheme === "ChatGPT-Next-Web") {
+                url = `${siteInfo.chat_link}/#/?settings={"key":"sk-${key}","url":"https://next.chatapi.asia"}`;
             }
 
             setChatUrl(url);
@@ -63,12 +66,13 @@ const Chat = () => {
     };
 
     useEffect(() => {
-        loadTokens();
-    }, [theme]);
+        loadTokens("lobehub");  // 确保在组件首次加载时使用 "lobehub" 主题
+    }, []);
 
     const handleThemeChange = (newTheme) => {
         setLoading(true);
         setTheme(newTheme);
+        loadTokens(newTheme);  // 更新主题时重新加载 tokens
     };
 
     if (loading) {
@@ -78,8 +82,8 @@ const Chat = () => {
     return (
         <div className="chat-container">
             <div className="theme-selector">
-                <button onClick={() => handleThemeChange("lobehub")}>Lobehub Theme</button>
-                <button onClick={() => handleThemeChange("ChatGPT-Next-Web")}>ChatGPT-Next-Web Theme</button>
+                <button onClick={() => handleThemeChange("lobehub")}>Lobehub 主题</button>
+                <button onClick={() => handleThemeChange("ChatGPT-Next-Web")}>ChatGPT-Next-Web 主题</button>
             </div>
             <iframe
                 src={chatUrl}
