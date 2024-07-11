@@ -141,21 +141,6 @@ func (user *User) Insert(inviterId int) error {
 			RecordLog(inviterId, LogTypeSystem, fmt.Sprintf("邀请用户赠送 %s", common.LogQuota(config.QuotaForInviter)))
 		}
 	}
-	// 创建默认令牌
-	cleanToken := Token{
-		UserId:         user.Id,
-		Name:           "default",
-		Key:            random.GenerateKey(),
-		CreatedTime:    helper.GetTimestamp(),
-		AccessedTime:   helper.GetTimestamp(),
-		ExpiredTime:    -1,
-		RemainQuota:    -1,
-		UnlimitedQuota: true,
-	}
-	result.Error = cleanToken.Insert()
-	if result.Error != nil {
-		return result.Error
-	}
 	return nil
 }
 

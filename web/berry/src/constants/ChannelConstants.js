@@ -13,7 +13,7 @@ export const CHANNEL_OPTIONS = {
   },
   33: {
     key: 33,
-    text: 'AWS Claude',
+    text: 'AWS',
     value: 33,
     color: 'primary'
   },
@@ -46,6 +46,12 @@ export const CHANNEL_OPTIONS = {
     text: 'Mistral AI',
     value: 28,
     color: 'warning'
+  },
+  40: {
+    key: 40,
+    text: '字节跳动豆包',
+    value: 40,
+    color: 'primary'
   },
   15: {
     key: 15,
@@ -154,6 +160,12 @@ export const CHANNEL_OPTIONS = {
     text: 'together.ai',
     value: 39,
     color: 'primary'
+  },
+  41: {
+    key: 41,
+    text: 'Novita',
+    value: 41,
+    color: 'purple'
   },
   8: {
     key: 8,
