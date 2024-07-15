@@ -17,7 +17,8 @@ import {
   Select,
   MenuItem,
   IconButton,
-  FormHelperText
+  FormHelperText,
+  TextField
 } from '@mui/material';
 
 import Visibility from '@mui/icons-material/Visibility';
@@ -44,6 +45,11 @@ const validationSchema = Yup.object().shape({
     is: false,
     then: Yup.number().min(0, '额度 不能小于 0'),
     otherwise: Yup.number()
+  }),
+  expiration_date: Yup.date().when('group', {
+    is: (val) => val !== 'default',
+    then: Yup.date().required('到期时间 不能为空').nullable(),
+    otherwise: Yup.date().nullable()
   })
 });
 
@@ -53,7 +59,8 @@ const originInputs = {
   display_name: '',
   password: '',
   group: 'default',
-  quota: 0
+  quota: 0,
+  expiration_date: null
 };
 
 const EditModal = ({ open, userId, onCancel, onOk }) => {
@@ -125,156 +132,188 @@ const EditModal = ({ open, userId, onCancel, onOk }) => {
   }, [userId]);
 
   return (
-    <Dialog open={open} onClose={onCancel} fullWidth maxWidth={'md'}>
-      <DialogTitle sx={{ margin: '0px', fontWeight: 700, lineHeight: '1.55556', padding: '24px', fontSize: '1.125rem' }}>
-        {userId ? '编辑用户' : '新建用户'}
-      </DialogTitle>
-      <Divider />
-      <DialogContent>
-        <Formik initialValues={inputs} enableReinitialize validationSchema={validationSchema} onSubmit={submit}>
-          {({ errors, handleBlur, handleChange, handleSubmit, touched, values, isSubmitting }) => (
-            <form noValidate onSubmit={handleSubmit}>
-              <FormControl fullWidth error={Boolean(touched.username && errors.username)} sx={{ ...theme.typography.otherInput }}>
-                <InputLabel htmlFor="channel-username-label">用户名</InputLabel>
-                <OutlinedInput
-                  id="channel-username-label"
-                  label="用户名"
-                  type="text"
-                  value={values.username}
-                  name="username"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  inputProps={{ autoComplete: 'username' }}
-                  aria-describedby="helper-text-channel-username-label"
-                />
-                {touched.username && errors.username && (
-                  <FormHelperText error id="helper-tex-channel-username-label">
-                    {errors.username}
-                  </FormHelperText>
-                )}
-              </FormControl>
-
-              <FormControl fullWidth error={Boolean(touched.display_name && errors.display_name)} sx={{ ...theme.typography.otherInput }}>
-                <InputLabel htmlFor="channel-display_name-label">显示名称</InputLabel>
-                <OutlinedInput
-                  id="channel-display_name-label"
-                  label="显示名称"
-                  type="text"
-                  value={values.display_name}
-                  name="display_name"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  inputProps={{ autoComplete: 'display_name' }}
-                  aria-describedby="helper-text-channel-display_name-label"
-                />
-                {touched.display_name && errors.display_name && (
-                  <FormHelperText error id="helper-tex-channel-display_name-label">
-                    {errors.display_name}
-                  </FormHelperText>
-                )}
-              </FormControl>
-
-              <FormControl fullWidth error={Boolean(touched.password && errors.password)} sx={{ ...theme.typography.otherInput }}>
-                <InputLabel htmlFor="channel-password-label">密码</InputLabel>
-                <OutlinedInput
-                  id="channel-password-label"
-                  label="密码"
-                  type={showPassword ? 'text' : 'password'}
-                  value={values.password}
-                  name="password"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  inputProps={{ autoComplete: 'password' }}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={handleClickShowPassword}
-                        onMouseDown={handleMouseDownPassword}
-                        edge="end"
-                        size="large"
-                      >
-                        {showPassword ? <Visibility /> : <VisibilityOff />}
-                      </IconButton>
-                    </InputAdornment>
-                  }
-                  aria-describedby="helper-text-channel-password-label"
-                />
-                {touched.password && errors.password && (
-                  <FormHelperText error id="helper-tex-channel-password-label">
-                    {errors.password}
-                  </FormHelperText>
-                )}
-              </FormControl>
-
-              {values.is_edit && (
-                <>
-                  <FormControl fullWidth error={Boolean(touched.quota && errors.quota)} sx={{ ...theme.typography.otherInput }}>
-                    <InputLabel htmlFor="channel-quota-label">额度</InputLabel>
+      <Dialog open={open} onClose={onCancel} fullWidth maxWidth={'md'}>
+        <DialogTitle sx={{ margin: '0px', fontWeight: 700, lineHeight: '1.55556', padding: '24px', fontSize: '1.125rem' }}>
+          {userId ? '编辑用户' : '新建用户'}
+        </DialogTitle>
+        <Divider />
+        <DialogContent>
+          <Formik initialValues={inputs} enableReinitialize validationSchema={validationSchema} onSubmit={submit}>
+            {({ errors, handleBlur, handleChange, handleSubmit, setFieldValue, touched, values, isSubmitting }) => (
+                <form noValidate onSubmit={handleSubmit}>
+                  <FormControl fullWidth error={Boolean(touched.username && errors.username)} sx={{ ...theme.typography.otherInput }}>
+                    <InputLabel htmlFor="channel-username-label">用户名</InputLabel>
                     <OutlinedInput
-                      id="channel-quota-label"
-                      label="额度"
-                      type="number"
-                      value={values.quota}
-                      name="quota"
-                      endAdornment={<InputAdornment position="end">{renderQuotaWithPrompt(values.quota)}</InputAdornment>}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                      aria-describedby="helper-text-channel-quota-label"
-                      disabled={values.unlimited_quota}
+                        id="channel-username-label"
+                        label="用户名"
+                        type="text"
+                        value={values.username}
+                        name="username"
+                        onBlur={handleBlur}
+                        onChange={handleChange}
+                        inputProps={{ autoComplete: 'username' }}
+                        aria-describedby="helper-text-channel-username-label"
                     />
-
-                    {touched.quota && errors.quota && (
-                      <FormHelperText error id="helper-tex-channel-quota-label">
-                        {errors.quota}
-                      </FormHelperText>
+                    {touched.username && errors.username && (
+                        <FormHelperText error id="helper-tex-channel-username-label">
+                          {errors.username}
+                        </FormHelperText>
                     )}
                   </FormControl>
 
-                  <FormControl fullWidth error={Boolean(touched.group && errors.group)} sx={{ ...theme.typography.otherInput }}>
-                    <InputLabel htmlFor="channel-group-label">分组</InputLabel>
-                    <Select
-                      id="channel-group-label"
-                      label="分组"
-                      value={values.group}
-                      name="group"
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                      MenuProps={{
-                        PaperProps: {
-                          style: {
-                            maxHeight: 200
-                          }
+                  <FormControl fullWidth error={Boolean(touched.display_name && errors.display_name)} sx={{ ...theme.typography.otherInput }}>
+                    <InputLabel htmlFor="channel-display_name-label">显示名称</InputLabel>
+                    <OutlinedInput
+                        id="channel-display_name-label"
+                        label="显示名称"
+                        type="text"
+                        value={values.display_name}
+                        name="display_name"
+                        onBlur={handleBlur}
+                        onChange={handleChange}
+                        inputProps={{ autoComplete: 'display_name' }}
+                        aria-describedby="helper-text-channel-display_name-label"
+                    />
+                    {touched.display_name && errors.display_name && (
+                        <FormHelperText error id="helper-tex-channel-display_name-label">
+                          {errors.display_name}
+                        </FormHelperText>
+                    )}
+                  </FormControl>
+
+                  <FormControl fullWidth error={Boolean(touched.password && errors.password)} sx={{ ...theme.typography.otherInput }}>
+                    <InputLabel htmlFor="channel-password-label">密码</InputLabel>
+                    <OutlinedInput
+                        id="channel-password-label"
+                        label="密码"
+                        type={showPassword ? 'text' : 'password'}
+                        value={values.password}
+                        name="password"
+                        onBlur={handleBlur}
+                        onChange={handleChange}
+                        inputProps={{ autoComplete: 'password' }}
+                        endAdornment={
+                          <InputAdornment position="end">
+                            <IconButton
+                                aria-label="toggle password visibility"
+                                onClick={handleClickShowPassword}
+                                onMouseDown={handleMouseDownPassword}
+                                edge="end"
+                                size="large"
+                            >
+                              {showPassword ? <Visibility /> : <VisibilityOff />}
+                            </IconButton>
+                          </InputAdornment>
                         }
-                      }}
-                    >
-                      {groupOptions.map((option) => {
-                        return (
-                          <MenuItem key={option} value={option}>
-                            {option}
-                          </MenuItem>
-                        );
-                      })}
-                    </Select>
-                    {touched.group && errors.group && (
-                      <FormHelperText error id="helper-tex-channel-group-label">
-                        {errors.group}
-                      </FormHelperText>
+                        aria-describedby="helper-text-channel-password-label"
+                    />
+                    {touched.password && errors.password && (
+                        <FormHelperText error id="helper-tex-channel-password-label">
+                          {errors.password}
+                        </FormHelperText>
                     )}
                   </FormControl>
-                </>
-              )}
-              <DialogActions>
-                <Button onClick={onCancel}>取消</Button>
-                <Button disableElevation disabled={isSubmitting} type="submit" variant="contained" color="primary">
-                  提交
-                </Button>
-              </DialogActions>
-            </form>
-          )}
-        </Formik>
-      </DialogContent>
-    </Dialog>
+
+                  {values.is_edit && (
+                      <>
+                        <FormControl fullWidth error={Boolean(touched.quota && errors.quota)} sx={{ ...theme.typography.otherInput }}>
+                          <InputLabel htmlFor="channel-quota-label">额度</InputLabel>
+                          <OutlinedInput
+                              id="channel-quota-label"
+                              label="额度"
+                              type="number"
+                              value={values.quota}
+                              name="quota"
+                              endAdornment={<InputAdornment position="end">{renderQuotaWithPrompt(values.quota)}</InputAdornment>}
+                              onBlur={handleBlur}
+                              onChange={handleChange}
+                              aria-describedby="helper-text-channel-quota-label"
+                              disabled={values.unlimited_quota}
+                          />
+
+                          {touched.quota && errors.quota && (
+                              <FormHelperText error id="helper-tex-channel-quota-label">
+                                {errors.quota}
+                              </FormHelperText>
+                          )}
+                        </FormControl>
+
+                        <FormControl fullWidth error={Boolean(touched.group && errors.group)} sx={{ ...theme.typography.otherInput }}>
+                          <InputLabel htmlFor="channel-group-label">分组</InputLabel>
+                          <Select
+                              id="channel-group-label"
+                              label="分组"
+                              value={values.group}
+                              name="group"
+                              onBlur={handleBlur}
+                              onChange={(e) => {
+                                handleChange(e);
+                                if (e.target.value === 'default') {
+                                  setFieldValue('expiration_date', null);
+                                }
+                              }}
+                              MenuProps={{
+                                PaperProps: {
+                                  style: {
+                                    maxHeight: 200
+                                  }
+                                }
+                              }}
+                          >
+                            {groupOptions.map((option) => {
+                              return (
+                                  <MenuItem key={option} value={option}>
+                                    {option}
+                                  </MenuItem>
+                              );
+                            })}
+                          </Select>
+                          {touched.group && errors.group && (
+                              <FormHelperText error id="helper-tex-channel-group-label">
+                                {errors.group}
+                              </FormHelperText>
+                          )}
+                        </FormControl>
+                      </>
+                  )}
+
+                  {values.group !== 'default' && (
+                      <FormControl fullWidth error={Boolean(touched.expiration_date && errors.expiration_date)} sx={{ ...theme.typography.otherInput }}>
+                        <TextField
+                            id="channel-expiration_date-label"
+                            label="到期时间"
+                            type="date"
+                            value={values.expiration_date ? values.expiration_date.split('T')[0] : ''}
+                            name="expiration_date"
+                            onBlur={handleBlur}
+                            onChange={handleChange}
+                            InputLabelProps={{
+                              shrink: true
+                            }}
+                            inputProps={{
+                              max: '9999-12-31' // 设置最大日期为9999年12月31日
+                            }}
+                            aria-describedby="helper-text-channel-expiration_date-label"
+                        />
+                        {touched.expiration_date && errors.expiration_date && (
+                            <FormHelperText error id="helper-tex-channel-expiration_date-label">
+                              {errors.expiration_date}
+                            </FormHelperText>
+                        )}
+                      </FormControl>
+                  )}
+
+                  <DialogActions>
+                    <Button onClick={onCancel}>取消</Button>
+                    <Button disableElevation disabled={isSubmitting} type="submit" variant="contained" color="primary">
+                      提交
+                    </Button>
+                  </DialogActions>
+                </form>
+            )}
+          </Formik>
+        </DialogContent>
+      </Dialog>
   );
 };
 
