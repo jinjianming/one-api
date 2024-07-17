@@ -95,6 +95,7 @@ func SyncOptions(frequency int) {
 	for {
 		time.Sleep(time.Duration(frequency) * time.Second)
 		logger.SysLog("syncing options from database")
+		checkAndDowngradeUsers()
 		loadOptionsFromDatabase()
 	}
 }

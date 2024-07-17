@@ -10,7 +10,9 @@ import (
 	"github.com/songquanpeng/one-api/common/logger"
 	"github.com/songquanpeng/one-api/common/random"
 	"gorm.io/gorm"
+	"log"
 	"strings"
+	"time"
 )
 
 const (
@@ -29,24 +31,25 @@ const (
 // User if you add sensitive fields, don't forget to clean them in setupLogin function.
 // Otherwise, the sensitive information will be saved on local storage in plain text!
 type User struct {
-	Id               int       `json:"id"`
-	Username         string    `json:"username" gorm:"unique;index" validate:"max=12"`
-	Password         string    `json:"password" gorm:"not null;" validate:"min=8,max=20"`
-	DisplayName      string    `json:"display_name" gorm:"index" validate:"max=20"`
-	Role             int       `json:"role" gorm:"type:int;default:1"`   // admin, util
-	Status           int       `json:"status" gorm:"type:int;default:1"` // enabled, disabled
-	Email            string    `json:"email" gorm:"index" validate:"max=50"`
-	GitHubId         string    `json:"github_id" gorm:"column:github_id;index"`
-	WeChatId         string    `json:"wechat_id" gorm:"column:wechat_id;index"`
-	LarkId           string    `json:"lark_id" gorm:"column:lark_id;index"`
-	VerificationCode string    `json:"verification_code" gorm:"-:all"`                                    // this field is only for Email verification, don't save it to database!
-	AccessToken      string    `json:"access_token" gorm:"type:char(32);column:access_token;uniqueIndex"` // this token is for system management
-	Quota            int64     `json:"quota" gorm:"bigint;default:0"`
-	UsedQuota        int64     `json:"used_quota" gorm:"bigint;default:0;column:used_quota"` // used quota
-	RequestCount     int       `json:"request_count" gorm:"type:int;default:0;"`             // request number
-	Group            string    `json:"group" gorm:"type:varchar(32);default:'default'"`
-	AffCode          string    `json:"aff_code" gorm:"type:varchar(32);column:aff_code;uniqueIndex"`
-	InviterId        int       `json:"inviter_id" gorm:"type:int;column:inviter_id;index"`
+	Id               int    `json:"id"`
+	Username         string `json:"username" gorm:"unique;index" validate:"max=12"`
+	Password         string `json:"password" gorm:"not null;" validate:"min=8,max=20"`
+	DisplayName      string `json:"display_name" gorm:"index" validate:"max=20"`
+	Role             int    `json:"role" gorm:"type:int;default:1"`   // admin, util
+	Status           int    `json:"status" gorm:"type:int;default:1"` // enabled, disabled
+	Email            string `json:"email" gorm:"index" validate:"max=50"`
+	GitHubId         string `json:"github_id" gorm:"column:github_id;index"`
+	WeChatId         string `json:"wechat_id" gorm:"column:wechat_id;index"`
+	LarkId           string `json:"lark_id" gorm:"column:lark_id;index"`
+	VerificationCode string `json:"verification_code" gorm:"-:all"`                                    // this field is only for Email verification, don't save it to database!
+	AccessToken      string `json:"access_token" gorm:"type:char(32);column:access_token;uniqueIndex"` // this token is for system management
+	Quota            int64  `json:"quota" gorm:"bigint;default:0"`
+	UsedQuota        int64  `json:"used_quota" gorm:"bigint;default:0;column:used_quota"` // used quota
+	RequestCount     int    `json:"request_count" gorm:"type:int;default:0;"`             // request number
+	Group            string `json:"group" gorm:"type:varchar(32);default:'default'"`
+	AffCode          string `json:"aff_code" gorm:"type:varchar(32);column:aff_code;uniqueIndex"`
+	InviterId        int    `json:"inviter_id" gorm:"type:int;column:inviter_id;index"`
+	ExpirationDate   int64  `json:"expiration_date" gorm:"column:expiration_date"` // Expiration date of the user's subscription or account.
 }
 
 func GetMaxUserId() int {
@@ -209,6 +212,22 @@ func (user *User) ValidateAndFill() (err error) {
 	okay := common.ValidatePasswordAndHash(password, user.Password)
 	if !okay || user.Status != UserStatusEnabled {
 		return errors.New("用户名或密码错误，或用户已被封禁")
+	}
+	// 校验用户是不是非default,如果是非default,判断到期时间如果过期了降级为default
+	if user.Group != "default" {
+		// 将时间戳转换为 time.Time 类型
+		expirationTime := time.Unix(user.ExpirationDate, 0)
+		// 获取当前时间
+		currentTime := time.Now()
+
+		// 比较当前时间和到期时间
+		if expirationTime.Before(currentTime) {
+			// 降级为default
+			user.Group = "default"
+			err = DB.Model(user).Updates(user).Error
+			fmt.Printf("用户: %s,特权组过期降为default", user.Username)
+			return err
+		}
 	}
 	return nil
 }
@@ -434,4 +453,34 @@ func updateUserRequestCount(id int, count int) {
 func GetUsernameById(id int) (username string) {
 	DB.Model(&User{}).Where("id = ?", id).Select("username").Find(&username)
 	return username
+}
+
+func checkAndDowngradeUsers() {
+	var users []User // 修复这里，应该是一个用户切片
+
+	// 查询所有 Group 不为 "default" 的用户
+	if err := DB.Where("Group <> ?", "default").Find(&users).Error; err != nil {
+		log.Printf("查询用户失败: %v", err)
+		return
+	}
+
+	currentTime := time.Now()
+
+	for _, user := range users {
+		if user.Group != "default" {
+			// 将时间戳转换为 time.Time 类型
+			expirationTime := time.Unix(user.ExpirationDate, 0)
+
+			// 比较当前时间和到期时间
+			if expirationTime.Before(currentTime) {
+				// 降级为 default
+				user.Group = "default"
+				if err := DB.Model(&user).Updates(user).Error; err != nil {
+					log.Printf("更新用户 %s 失败: %v", user.Username, err)
+				} else {
+					fmt.Printf("用户: %s, 特权组过期降为 default\n", user.Username)
+				}
+			}
+		}
+	}
 }
