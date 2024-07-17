@@ -459,7 +459,14 @@ func checkAndDowngradeUsers() {
 	var users []User // 修复这里，应该是一个用户切片
 
 	// 查询所有 Group 不为 "default" 的用户
-	if err := DB.Where("`Group` <> ?", "default").Find(&users).Error; err != nil {
+	// 构建查询条件
+	query := DB.Where("`Group` <> ?", "default"). // Group 不等于 "default"
+							Where("`username` <> ?", "root").       // username 不等于 "root"
+							Where("`expiration_date` IS NOT NULL"). // expiration_date 不为空
+							Where("`expiration_date` != ?", -1)     // expiration_date 不等于 -1
+
+	// 执行查询并处理错误
+	if err := query.Find(&users).Error; err != nil {
 		log.Printf("查询用户失败: %v", err)
 		return
 	}
