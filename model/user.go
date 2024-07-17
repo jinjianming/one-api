@@ -214,7 +214,7 @@ func (user *User) ValidateAndFill() (err error) {
 		return errors.New("用户名或密码错误，或用户已被封禁")
 	}
 	// 校验用户是不是非default,如果是非default,判断到期时间如果过期了降级为default
-	if user.Group != "default" {
+	if user.ExpirationDate > 0 {
 		// 将时间戳转换为 time.Time 类型
 		expirationTime := time.Unix(user.ExpirationDate, 0)
 		// 获取当前时间
@@ -222,11 +222,14 @@ func (user *User) ValidateAndFill() (err error) {
 
 		// 比较当前时间和到期时间
 		if expirationTime.Before(currentTime) {
-			// 降级为default
+			// 降级为 default
 			user.Group = "default"
-			err = DB.Model(user).Updates(user).Error
-			fmt.Printf("用户: %s,特权组过期降为default", user.Username)
-			return err
+			err := DB.Model(user).Updates(user).Error
+			if err != nil {
+				fmt.Printf("用户: %s, 降级为 default 时发生错误: %v\n", user.Username, err)
+				return err
+			}
+			fmt.Printf("用户: %s, 特权组过期降为 default\n", user.Username)
 		}
 	}
 	return nil
