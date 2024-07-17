@@ -456,7 +456,7 @@ func GetUsernameById(id int) (username string) {
 }
 
 func checkAndDowngradeUsers() {
-	var users []User // 修复这里，应该是一个用户切片
+	var users []User
 
 	// 查询所有 Group 不为 "default" 的用户
 	// 构建查询条件
