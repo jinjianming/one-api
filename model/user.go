@@ -48,7 +48,6 @@ type User struct {
 	Group            string    `json:"group" gorm:"type:varchar(32);default:'default'"`
 	AffCode          string    `json:"aff_code" gorm:"type:varchar(32);column:aff_code;uniqueIndex"`
 	InviterId        int       `json:"inviter_id" gorm:"type:int;column:inviter_id;index"`
-	ExpirationDate   time.Time `json:"expiration_date" gorm:"type:datetime;column:expiration_date"` // Expiration date of the user's subscription or account.
 }
 
 func GetMaxUserId() int {
