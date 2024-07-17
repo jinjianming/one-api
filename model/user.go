@@ -459,7 +459,7 @@ func checkAndDowngradeUsers() {
 	var users []User // 修复这里，应该是一个用户切片
 
 	// 查询所有 Group 不为 "default" 的用户
-	if err := DB.Where("Group <> ?", "default").Find(&users).Error; err != nil {
+	if err := DB.Where("`Group` <> ?", "default").Find(&users).Error; err != nil {
 		log.Printf("查询用户失败: %v", err)
 		return
 	}
