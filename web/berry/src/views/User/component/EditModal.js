@@ -2,7 +2,9 @@ import PropTypes from 'prop-types';
 import * as Yup from 'yup';
 import { Formik } from 'formik';
 import { useTheme } from '@mui/material/styles';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { format } from 'date-fns';
+
 import {
   Dialog,
   DialogTitle,
@@ -18,7 +20,10 @@ import {
   MenuItem,
   IconButton,
   FormHelperText,
-  TextField
+  TextField,
+  Typography,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
 
 import Visibility from '@mui/icons-material/Visibility';
@@ -46,10 +51,16 @@ const validationSchema = Yup.object().shape({
     then: Yup.number().min(0, '额度 不能小于 0'),
     otherwise: Yup.number()
   }),
-  expiration_date: Yup.date().when('group', {
-    is: (val) => val !== 'default',
-    then: Yup.date().required('到期时间 不能为空').nullable(),
-    otherwise: Yup.date().nullable()
+  expiration_date: Yup.mixed().when('group', {
+    is: (group) => group !== 'default',
+    then: Yup.mixed().test(
+        'expiration_date-required',
+        '到期时间 不能为空',
+        function (value) {
+          const { expiration_date } = this.parent;
+          return expiration_date === -1 || !!expiration_date;
+        }
+    ),
   })
 });
 
@@ -71,6 +82,12 @@ const EditModal = ({ open, userId, onCancel, onOk }) => {
 
   const submit = async (values, { setErrors, setStatus, setSubmitting }) => {
     setSubmitting(true);
+
+    // 将到期时间转换为 Unix 时间戳
+    if (values.expiration_date && values.expiration_date !== -1) {
+      const date = new Date(values.expiration_date);
+      values.expiration_date = Math.floor(date.getTime() / 1000); // 转换为秒级的 Unix 时间戳
+    }
 
     let res;
     if (values.is_edit) {
@@ -102,16 +119,23 @@ const EditModal = ({ open, userId, onCancel, onOk }) => {
     event.preventDefault();
   };
 
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     let res = await API.get(`/api/user/${userId}`);
     const { success, message, data } = res.data;
     if (success) {
       data.is_edit = true;
+
+      // 将 Unix 时间戳转换为日期字符串
+      if (data.expiration_date && data.expiration_date !== -1) {
+        const date = new Date(data.expiration_date * 1000); // 转换为毫秒级的时间戳
+        data.expiration_date = format(date, 'yyyy-MM-dd\'T\'HH:mm:ss'); // 格式化为 datetime-local 格式
+      }
+
       setInputs(data);
     } else {
       showError(message);
     }
-  };
+  }, [userId]);
 
   const fetchGroups = async () => {
     try {
@@ -129,7 +153,7 @@ const EditModal = ({ open, userId, onCancel, onOk }) => {
     } else {
       setInputs(originInputs);
     }
-  }, [userId]);
+  }, [userId, loadUser]);
 
   return (
       <Dialog open={open} onClose={onCancel} fullWidth maxWidth={'md'}>
@@ -282,8 +306,8 @@ const EditModal = ({ open, userId, onCancel, onOk }) => {
                         <TextField
                             id="channel-expiration_date-label"
                             label="到期时间"
-                            type="date"
-                            value={values.expiration_date ? values.expiration_date.split('T')[0] : ''}
+                            type="datetime-local" // 修改为 datetime-local
+                            value={values.expiration_date}
                             name="expiration_date"
                             onBlur={handleBlur}
                             onChange={handleChange}
@@ -291,15 +315,27 @@ const EditModal = ({ open, userId, onCancel, onOk }) => {
                               shrink: true
                             }}
                             inputProps={{
-                              max: '9999-12-31' // 设置最大日期为9999年12月31日
+                              max: '9999-12-31T23:59:59' // 设置最大日期和时间
                             }}
                             aria-describedby="helper-text-channel-expiration_date-label"
+                            disabled={values.expiration_date === -1}
                         />
                         {touched.expiration_date && errors.expiration_date && (
                             <FormHelperText error id="helper-tex-channel-expiration_date-label">
                               {errors.expiration_date}
                             </FormHelperText>
                         )}
+                        <FormControlLabel
+                            control={
+                              <Switch
+                                  checked={values.expiration_date === -1}
+                                  onChange={(e) => setFieldValue('expiration_date', e.target.checked ? -1 : '')}
+                                  name="permanent"
+                                  color="primary"
+                              />
+                            }
+                            label="永不过期"
+                        />
                       </FormControl>
                   )}
 
