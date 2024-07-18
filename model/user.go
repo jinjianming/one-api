@@ -49,7 +49,7 @@ type User struct {
 	Group            string `json:"group" gorm:"type:varchar(32);default:'default'"`
 	AffCode          string `json:"aff_code" gorm:"type:varchar(32);column:aff_code;uniqueIndex"`
 	InviterId        int    `json:"inviter_id" gorm:"type:int;column:inviter_id;index"`
-	ExpirationDate   int64  `json:"expiration_date" gorm:"column:expiration_date"` // Expiration date of the user's subscription or account.
+	ExpirationDate   int64  `json:"expiration_date" gorm:"bigint;default:0;column:expiration_date"` // Expiration date of the user's subscription or account.
 }
 
 func GetMaxUserId() int {
@@ -214,7 +214,7 @@ func (user *User) ValidateAndFill() (err error) {
 		return errors.New("用户名或密码错误，或用户已被封禁")
 	}
 	// 校验用户是不是非default,如果是非default,判断到期时间如果过期了降级为default
-	if user.ExpirationDate > 0 {
+	if !(user.ExpirationDate > 0 && user.Username == "root") {
 		// 将时间戳转换为 time.Time 类型
 		expirationTime := time.Unix(user.ExpirationDate, 0)
 		// 获取当前时间
@@ -459,38 +459,35 @@ func GetUsernameById(id int) (username string) {
 }
 
 func checkAndDowngradeUsers() {
-	var users []User
+	// 获取当前时间的前一天的日期部分
+	//yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
 
-	// 查询所有 Group 不为 "default" 的用户
-	// 构建查询条件
-	query := DB.Where("`Group` <> ?", "default"). // Group 不等于 "default"
-							Where("`username` <> ?", "root").       // username 不等于 "root"
-							Where("`expiration_date` IS NOT NULL"). // expiration_date 不为空
-							Where("`expiration_date` != ?", -1)     // expiration_date 不等于 -1
+	// 获取昨天的时间戳
+	yesterdayTimestamp := time.Now().AddDate(0, 0, -1).Unix()
+	// Construct the query
+	query := DB.Model(&User{}).
+		Where("`Group` != ?", "default"). // Use single quotes for string literal
+		Where("`username` != ?", "root").
+		Where("`expiration_date` > 0").
+		Where("`expiration_date` <= ?", yesterdayTimestamp)
+	var userList []int
+	query.Select("id").Find(&userList)
+	// 降级更新操作
+	query.Update("Group", "default")
 
-	// 执行查询并处理错误
-	if err := query.Find(&users).Error; err != nil {
-		log.Printf("查询用户失败: %v", err)
+	// 处理错误
+	if query.Error != nil {
+		log.Printf("批量更新用户分组失败: %v", query.Error)
 		return
 	}
-
-	currentTime := time.Now()
-
-	for _, user := range users {
-		if user.Group != "default" {
-			// 将时间戳转换为 time.Time 类型
-			expirationTime := time.Unix(user.ExpirationDate, 0)
-
-			// 比较当前时间和到期时间
-			if expirationTime.Before(currentTime) {
-				// 降级为 default
-				user.Group = "default"
-				if err := DB.Model(&user).Updates(user).Error; err != nil {
-					log.Printf("更新用户 %s 失败: %v", user.Username, err)
-				} else {
-					fmt.Printf("用户: %s, 特权组过期降为 default\n", user.Username)
-				}
+	// 删除已过期用户的Redis缓存
+	if common.RedisEnabled {
+		for _, userId := range userList {
+			err := common.RedisSet(fmt.Sprintf("user_group:%d", userId), "default", time.Duration(UserId2GroupCacheSeconds)*time.Second)
+			if err != nil {
+				log.Printf("更新用户: %d,权益缓存失败, Error: %v", userId, query.Error)
 			}
 		}
 	}
+
 }
