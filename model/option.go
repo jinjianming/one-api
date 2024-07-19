@@ -92,7 +92,7 @@ func ScheduleCheckAndDowngrade() {
 
 	// 开始调度
 	s.StartBlocking()
-	log.Printf("开始调度")
+	log.Printf("开始扫描权益任务\n")
 }
 
 func loadOptionsFromDatabase() {

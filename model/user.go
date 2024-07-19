@@ -491,6 +491,7 @@ func checkAndDowngradeUsers() {
 		log.Printf("批量更新用户分组失败: %v", updateQuery.Error)
 		return
 	}
+	log.Printf("用户: [ %d ]已完成降级", userList)
 
 	// 删除已过期用户的Redis缓存
 	if common.RedisEnabled {
@@ -500,5 +501,6 @@ func checkAndDowngradeUsers() {
 				log.Printf("更新用户: %d, 权益缓存失败, Error: %v", userId, err)
 			}
 		}
+		log.Printf("用户: [ %d ]权益缓存已更新", userList)
 	}
 }
