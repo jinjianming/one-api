@@ -33,7 +33,7 @@ const Chat = () => {
                     },
                 },
             };
-            const url = `${siteInfo.chat_link}/?settings=${JSON.stringify(settings)}`;
+            const url = `${siteInfo.chat_link}/v1/?settings=${JSON.stringify(settings)}`;
 
             setChatUrl(url);
         } catch (error) {
