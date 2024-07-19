@@ -18,7 +18,7 @@ const Chat = () => {
             }
 
             const key = res.data.data[0].key;
-            const serverAddress = siteInfo.server_address;
+            const serverAddress = siteInfo.server_address + "/v1/";
 
             const settings = {
                 keyVaults: {
@@ -33,7 +33,7 @@ const Chat = () => {
                     },
                 },
             };
-            const url = `${siteInfo.chat_link}/v1/?settings=${JSON.stringify(settings)}`;
+            const url = `${siteInfo.chat_link}/?settings=${JSON.stringify(settings)}`;
 
             setChatUrl(url);
         } catch (error) {
