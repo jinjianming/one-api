@@ -1,10 +1,11 @@
 package gemini
 
 type ChatRequest struct {
-	Contents         []ChatContent        `json:"contents"`
-	SafetySettings   []ChatSafetySettings `json:"safety_settings,omitempty"`
-	GenerationConfig ChatGenerationConfig `json:"generation_config,omitempty"`
-	Tools            []ChatTools          `json:"tools,omitempty"`
+	Contents          []ChatContent        `json:"contents"`
+	SafetySettings    []ChatSafetySettings `json:"safety_settings,omitempty"`
+	GenerationConfig  ChatGenerationConfig `json:"generation_config,omitempty"`
+	Tools             []ChatTools          `json:"tools,omitempty"`
+	SystemInstruction *ChatContent         `json:"system_instruction,omitempty"`
 }
 
 type EmbeddingRequest struct {
@@ -67,8 +68,8 @@ type ChatTools struct {
 type ChatGenerationConfig struct {
 	ResponseMimeType string   `json:"responseMimeType,omitempty"`
 	ResponseSchema   any      `json:"responseSchema,omitempty"`
-	Temperature      float64  `json:"temperature,omitempty"`
-	TopP             float64  `json:"topP,omitempty"`
+	Temperature      *float64 `json:"temperature,omitempty"`
+	TopP             *float64 `json:"topP,omitempty"`
 	TopK             float64  `json:"topK,omitempty"`
 	MaxOutputTokens  int      `json:"maxOutputTokens,omitempty"`
 	CandidateCount   int      `json:"candidateCount,omitempty"`
